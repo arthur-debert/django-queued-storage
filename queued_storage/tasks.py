@@ -12,12 +12,14 @@ class SaveToRemoteTask(Task):
     max_retries = MAX_RETRIES
     default_retry_delay = RETRY_DELAY
 
-    def run(self, name, local, remote, cache_key, **kwargs):
+    def run(self, name, local, remote, cache_key, removes_on_transfer, **kwargs):
         local_storage = get_storage_class(local)()
         remote_storage = get_storage_class(remote)()
 
         try:
             remote_storage.save(name, local_storage.open(name))
+            if removes_on_transfer:
+                local_storage.delete(name)
         except:
             # something went wrong while uploading the file, retry
             logger = self.get_logger(**kwargs)

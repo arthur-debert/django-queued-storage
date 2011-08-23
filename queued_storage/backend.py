@@ -9,12 +9,13 @@ QUEUED_REMOTE_STORAGE_CACHE_KEY_PREFIX = 'queued_remote_storage_'
 
 class QueuedRemoteStorage(Storage):
 
-    def __init__(self, local, remote, cache_prefix=QUEUED_REMOTE_STORAGE_CACHE_KEY_PREFIX, task=None):
+    def __init__(self, local, remote, cache_prefix=QUEUED_REMOTE_STORAGE_CACHE_KEY_PREFIX, task=None, removes_on_transfer=False):
         self.local_class = local
         self.remote_class = remote
         self.cache_prefix = cache_prefix
         self._local_instance = None
         self._remote_instance = None
+        self.removes_on_transfer = removes_on_transfer
 
         # allow users to override the task that uploads the image to the remote
         # server
@@ -58,11 +59,13 @@ class QueuedRemoteStorage(Storage):
     def save(self, name, content):
         cache.set(self.get_cache_key(name), False)
         name = self.local.save(name, content)
-
-        self.task.delay(name, self.local_class, self.remote_class, self.get_cache_key(name))
+        self._send_task(name)
 
         return name
 
+    def _send_task(self, name):
+        self.task.delay(name, self.local_class, self.remote_class, self.get_cache_key(name), self.removes_on_transfer)
+        
     def get_valid_name(self, name):
         name = name.encode('utf-8')
         return self.get_storage(name).get_valid_name(name)
@@ -87,6 +90,8 @@ class QueuedRemoteStorage(Storage):
 
     def url(self, name):
         return self.get_storage(name).url(name)
+        
+            
 
 class FileSystemAndS3Backend(QueuedRemoteStorage):
 
@@ -97,3 +102,7 @@ class FileSystemAndS3Backend(QueuedRemoteStorage):
             cache_prefix=cache_prefix
         )
 
+
+def retry_transfer(field):
+    if field.storage.using_local():
+        field.storage._send_task(field.name)
