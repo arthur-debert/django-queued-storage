@@ -16,6 +16,9 @@ class SaveToRemoteTask(Task):
     default_retry_delay = RETRY_DELAY
 
     def run(self, name, local, remote, cache_key, removes_on_transfer, **kwargs):
+        import logging 
+        logger = logging.getLogger("queued_storage")
+        
         logger.info("got task for %s" % name)
         local_storage = get_storage_class(local)()
         remote_storage = get_storage_class(remote)()
@@ -28,7 +31,6 @@ class SaveToRemoteTask(Task):
                 local_storage.delete(name)
         except:
             # something went wrong while uploading the file, retry
-            logger = self.get_logger(**kwargs)
             logger.exception("Unable to save '%s' to remote storage. About "
                     "to retry." % name)
             self.retry([name, local, remote, cache_key], **kwargs)
