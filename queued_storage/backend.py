@@ -64,6 +64,7 @@ class QueuedRemoteStorage(Storage):
         return name
 
     def get_valid_name(self, name):
+        name = name.encode('utf-8')
         return self.get_storage(name).get_valid_name(name)
 
     def get_available_name(self, name):
