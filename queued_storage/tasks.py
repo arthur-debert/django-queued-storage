@@ -1,5 +1,5 @@
 import logging 
-logger.get_logger("queued_storage")
+logger = logging.getLogger("queued_storage")
 
 from django.conf import settings
 from django.core.cache import cache

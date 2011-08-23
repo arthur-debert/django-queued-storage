@@ -1,5 +1,5 @@
 import logging 
-logger.get_logger("queued_storage")
+logger = logging.getLogger("queued_storage")
 import urllib
 
 from django.core.cache import cache
