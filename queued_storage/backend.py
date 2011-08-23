@@ -104,5 +104,5 @@ class FileSystemAndS3Backend(QueuedRemoteStorage):
 
 
 def retry_transfer(field):
-    if field.storage.using_local():
+    if field.storage.using_local(field.name):
         field.storage._send_task(field.name)
