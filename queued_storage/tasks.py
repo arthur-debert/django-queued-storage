@@ -1,3 +1,6 @@
+import logging 
+logger.get_logger("queued_storage")
+
 from django.conf import settings
 from django.core.cache import cache
 from django.core.files.storage import get_storage_class
@@ -13,12 +16,15 @@ class SaveToRemoteTask(Task):
     default_retry_delay = RETRY_DELAY
 
     def run(self, name, local, remote, cache_key, removes_on_transfer, **kwargs):
+        logger.info("got task for %s" % name)
         local_storage = get_storage_class(local)()
         remote_storage = get_storage_class(remote)()
 
         try:
             remote_storage.save(name, local_storage.open(name))
+            logger.info("send to remote for %s" % name)
             if removes_on_transfer:
+                logger.info("should delete for %s" % name)
                 local_storage.delete(name)
         except:
             # something went wrong while uploading the file, retry

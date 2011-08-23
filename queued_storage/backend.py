@@ -1,3 +1,5 @@
+import logging 
+logger.get_logger("queued_storage")
 import urllib
 
 from django.core.cache import cache
@@ -64,6 +66,7 @@ class QueuedRemoteStorage(Storage):
         return name
 
     def _send_task(self, name):
+        logger.info("sending task for %s" % name)
         self.task.delay(name, self.local_class, self.remote_class, self.get_cache_key(name), self.removes_on_transfer)
         
     def get_valid_name(self, name):
